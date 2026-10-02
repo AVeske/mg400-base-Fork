@@ -25,7 +25,7 @@ RADIUS_MAX = 440.0   # mm — max horizontal reach
 # table instead of pressing into it. -72 is the Manual Override relay's default.
 # Measure your own: jog down slowly until the tool nearly touches the table,
 # read Z, add a few mm. Override with --z-floor or MG400_Z_FLOOR.
-DEFAULT_Z_FLOOR = -72.0
+DEFAULT_Z_FLOOR = -140.0
 
 
 def _clamp(v, lo, hi):

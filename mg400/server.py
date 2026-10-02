@@ -22,6 +22,7 @@ import threading
 
 from flask import Flask, jsonify, request, send_from_directory
 
+from .letter_api import register_letter_routes #Lisatud!
 from . import live
 from .driver import DobotMG400, DobotError
 from .limits import DEFAULT_Z_FLOOR, RADIUS_MAX, RADIUS_MIN, WORKSPACE, clamp_pose
@@ -63,7 +64,6 @@ _live = live.LiveState()
 # velocity + acceleration caps.
 _speed_ratio = 10     # % of MAX_LIN_VEL / MAX_ANG_VEL → 20 mm/s, 9 deg/s
 _ramp_secs = RAMP_SECS
-
 
 def _apply_motion(robot):
     """Push the current speed + smoothness to the follower as velocity and
@@ -171,6 +171,8 @@ def move_to(x, y, z, r=None, wait=True, timeout=12.0, tol=2.0):
         cur = current_pose()
         r = cur[3] if cur else 0.0
     x, y, z, r = _clamp_pose(float(x), float(y), float(z), float(r))
+    print(f"move_to target after clamp: {x}, {y}, {z}, {r}")
+    print("Calling robot.set_target_pose()")
     robot.set_target_pose(x, y, z, r)
     if not wait:
         return True, None
@@ -182,6 +184,10 @@ def move_to(x, y, z, r=None, wait=True, timeout=12.0, tol=2.0):
         time.sleep(0.03)
     return False, "move timed out"
 
+
+#--------------------------------------------------- Lisatud!
+register_letter_routes(app, move_to)
+#---------------------------------------------------
 
 def pump(mode):
     """Set the air pump: 'suck' | 'blow' | 'off'. Returns (ok, reason)."""
