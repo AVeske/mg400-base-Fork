@@ -23,6 +23,7 @@ import threading
 from flask import Flask, jsonify, request, send_from_directory
 
 from .letter_api import register_letter_routes #Lisatud!
+from .letter_queue import LetterQueue #Lisatud!
 from . import live
 from .driver import DobotMG400, DobotError
 from .limits import DEFAULT_Z_FLOOR, RADIUS_MAX, RADIUS_MIN, WORKSPACE, clamp_pose
@@ -184,10 +185,9 @@ def move_to(x, y, z, r=None, wait=True, timeout=12.0, tol=2.0):
         time.sleep(0.03)
     return False, "move timed out"
 
+letter_queue = LetterQueue(move_to)
 
-#--------------------------------------------------- Lisatud!
-register_letter_routes(app, move_to)
-#---------------------------------------------------
+register_letter_routes(app, letter_queue)
 
 def pump(mode):
     """Set the air pump: 'suck' | 'blow' | 'off'. Returns (ok, reason)."""

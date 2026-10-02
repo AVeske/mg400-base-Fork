@@ -1,10 +1,12 @@
 #Will do the actual writing on the robot
 # Need väärtused määratakse laboris päris roboti, paberi ja pastakahoidiku järgi.
-ORIGIN_X = -39.0
-ORIGIN_Y = -364.0
+import time
 
-PEN_UP_Z = -60.0
-PEN_DOWN_Z = -72.0
+ORIGIN_X = -40.0
+ORIGIN_Y = -440.0
+
+PEN_UP_Z = -37.0
+PEN_DOWN_Z = -49.0
 
 TOOL_R = -68.0
 
@@ -29,7 +31,7 @@ def _require_config():
         )
 
 
-def _move(move_function, x, y, z):
+def _move(move_function, x, y, z, tol=0.5):
     print(f"Calling move_to: x={x}, y={y}, z={z}")
 
     ok, reason = move_function(
@@ -38,6 +40,7 @@ def _move(move_function, x, y, z):
         z=z,
         r=TOOL_R,
         wait=True,
+        tol=tol,
     )
 
     print(f"move_to result: ok={ok}, reason={reason}")
@@ -47,8 +50,15 @@ def _move(move_function, x, y, z):
             f"Robot move failed at x={x}, y={y}, z={z}: {reason}"
         )
 
+def to_robot_coordinates(x, y, offset_x=0.0):
+    x = x + offset_x
 
-def write_plan(plan, move_function):
+    robot_x = ORIGIN_X - y
+    robot_y = ORIGIN_Y + x
+
+    return robot_x, robot_y
+
+def write_plan(plan, move_function, offset_x=0.0):
     """
     Execute a drawing plan using the supplied robot movement function.
 
@@ -72,7 +82,9 @@ def write_plan(plan, move_function):
                 current_x,
                 current_y,
                 PEN_UP_Z,
+                tol=0.5,
             )
+            time.sleep(0.2)
 
         elif action == "pen_down":
             pen_down = True
@@ -82,11 +94,16 @@ def write_plan(plan, move_function):
                 current_x,
                 current_y,
                 PEN_DOWN_Z,
+                tol=0.3,
             )
+            time.sleep(0.2)
 
         elif action == "move":
-            current_x = ORIGIN_X + step["x"]
-            current_y = ORIGIN_Y + step["y"]
+            current_x, current_y = to_robot_coordinates(
+                step["x"],
+                step["y"],
+                offset_x,
+            )
 
             z = PEN_DOWN_Z if pen_down else PEN_UP_Z
 
@@ -95,6 +112,7 @@ def write_plan(plan, move_function):
                 current_x,
                 current_y,
                 z,
+                tol=0.5,
             )
 
         else:

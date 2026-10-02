@@ -1,10 +1,9 @@
 from flask import jsonify, request
 
 from .letter_drawing import create_letter_plan
-from .robot_writer import write_plan, writer_configured
 
 
-def register_letter_routes(app, move_function):
+def register_letter_routes(app, letter_queue):
 
     @app.route("/api/letter", methods=["POST"])
     def receive_letter():
@@ -26,41 +25,23 @@ def register_letter_routes(app, move_function):
                 "error": "Letter must contain exactly one character"
             }), 400
 
+        # Kontrollime enne queue'sse lisamist,
+        # et selline täht üldse olemas on.
         try:
-            plan = create_letter_plan(letter)
+            create_letter_plan(letter)
         except ValueError as error:
             return jsonify({
                 "ok": False,
                 "error": str(error)
             }), 400
 
-        print(f"Received letter: {letter}")
+        letter_queue.add(letter)
 
-        for step in plan:
-            print(step)
-
-        print("Writer configured:", writer_configured())
-
-        if writer_configured():
-            try:
-                print("Starting robot write")
-
-                write_plan(plan, move_function)
-
-                print("Robot write finished")
-
-            except RuntimeError as error:
-                print("Robot write error:", error)
-
-                return jsonify({
-                    "ok": False,
-                    "letter": letter,
-                    "error": str(error)
-                }), 500
+        print(f"Queued letter: {letter}")
 
         return jsonify({
             "ok": True,
             "letter": letter,
-            "steps": len(plan),
-            "robot_configured": writer_configured()
-        })
+            "queued": True,
+            "pending": letter_queue.pending_count()
+        }), 202
