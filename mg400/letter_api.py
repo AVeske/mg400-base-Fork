@@ -7,7 +7,13 @@ def register_letter_routes(app, letter_queue):
 
     @app.route("/api/letter", methods=["POST"])
     def receive_letter():
-        data = request.json or {}
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify(ok=False, error="Expected a JSON object"), 400
+
+        job_id = data.get("id")
+        if "id" in data and (type(job_id) is not int or not 0 <= job_id <= 2147483647):
+            return jsonify(ok=False, error="id must be a non-negative 32-bit integer"), 400
 
         letter = data.get("letter")
 
@@ -17,7 +23,9 @@ def register_letter_routes(app, letter_queue):
                 "error": "Missing letter"
             }), 400
 
-        letter = str(letter).upper()
+        if not isinstance(letter, str):
+            return jsonify(ok=False, error="letter must be a string"), 400
+        letter = letter.upper()
 
         if len(letter) != 1:
             return jsonify({
@@ -35,13 +43,14 @@ def register_letter_routes(app, letter_queue):
                 "error": str(error)
             }), 400
 
-        letter_queue.add(letter)
+        letter_queue.add(letter, job_id=job_id)
 
         print(f"Queued letter: {letter}")
 
         return jsonify({
             "ok": True,
             "letter": letter,
+            "id": job_id,
             "queued": True,
             "pending": letter_queue.pending_count()
         }), 202

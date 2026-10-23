@@ -220,3 +220,49 @@ motion code still gets its first run on the robot at low speed.
 Hands out of the 440 mm radius while a command is pending. First run of any new
 move at 20 % speed, tool 20 mm above the surface. E-stop within reach. Pump box
 wiring only with the robot disabled and the box unpowered.
+
+
+## Letter jobs relayed through Atom
+
+The station accepts a public job ID alongside the letter:
+
+```http
+POST /api/letter
+Content-Type: application/json
+
+{"letter": "A", "id": 17}
+```
+
+HTTP `202` means queued, not finished. The ID stays with the queued letter.
+Existing letter-only requests still work but do not generate a public result.
+Letters must have a drawing plan in `mg400/letters.py`.
+
+After `write_plan()` returns successfully, including the final pen lift, the
+station posts `{"id":17,"result":"done"}` to
+`http://192.168.4.1/api/result`. A drawing exception produces `"error"` instead.
+Existing motion completion checks use actual XYZ position within tolerance;
+they do not visually verify the drawing or independently verify physical settling.
+
+Atom must forward the result to public Flask and acknowledge with HTTP 2xx and
+JSON `{"ok":true}` only after forwarding or reliably storing it for later
+forwarding. Redirects and HTML pages are not acknowledgements. The station never
+calls public Flask directly and does not need its API key.
+
+Override Atom's address before starting the station, if needed (PowerShell):
+
+```powershell
+$env:MG400_ATOM_URL = "http://192.168.4.1"
+python -m mg400 serve
+```
+
+A separate worker sends results with a 5-second request timeout and retries after
+5 seconds on failure. Reporting retries never repeat robot commands and do not
+block the drawing queue. Pending reports are held in memory and are lost when
+the station process exits. Atom/Flask must accept repeated reports for the same
+ID, and a late `Atom Accepted` must not overwrite a final `done` or `error`.
+
+Required companion changes in the Atom project: include `id` in `/api/letter`,
+implement the local `/api/result` receiver, and relay results to public Flask.
+Connect the laptop to `AtomFramer` and allow incoming station traffic on port
+8000. Atom currently expects the station at `192.168.4.2`; verify the laptop's
+actual WiFi address before use. Restart the station to load these code changes.

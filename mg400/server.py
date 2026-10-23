@@ -24,6 +24,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from .letter_api import register_letter_routes #Lisatud!
 from .letter_queue import LetterQueue #Lisatud!
+from .result_client import AtomResultReporter
 from . import live
 from .driver import DobotMG400, DobotError
 from .limits import DEFAULT_Z_FLOOR, RADIUS_MAX, RADIUS_MIN, WORKSPACE, clamp_pose
@@ -185,7 +186,10 @@ def move_to(x, y, z, r=None, wait=True, timeout=12.0, tol=2.0):
         time.sleep(0.03)
     return False, "move timed out"
 
-letter_queue = LetterQueue(move_to)
+atom_result_reporter = AtomResultReporter(
+    atom_url=os.environ.get("MG400_ATOM_URL", "http://192.168.4.1")
+)
+letter_queue = LetterQueue(move_to, result_reporter=atom_result_reporter)
 
 register_letter_routes(app, letter_queue)
 
