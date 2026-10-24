@@ -12,6 +12,7 @@
     section { background: #171b22; border: 1px solid #303642; border-radius: 12px; padding: 20px; }
     h2 { margin-top: 0; }
     .view { aspect-ratio: 4 / 3; background: #090b0e; display: grid; place-items: center; border-radius: 8px; overflow: hidden; }
+    .view:fullscreen { width: 100vw; height: 100vh; border-radius: 0; }
     img { display: block; width: 100%; height: 100%; object-fit: contain; }
     .placeholder { color: #aab3c2; text-align: center; padding: 20px; }
     a { color: #85b7ff; }
@@ -29,7 +30,7 @@
   <h1>Camera Streams</h1>
   <div class="cameras">
     <section>
-      <h2>Table Camera</h2>
+      <h2>Table Camera</h2><button type="button" data-fullscreen="tableCamera">Full screen</button>
       <form id="cameraSelection" class="controls">
         <label for="cameraIndex">Camera:</label>
         <select id="cameraIndex">
@@ -49,8 +50,15 @@
       </div>
     </section>
     <section>
-      <h2>Tool Camera</h2>
-      <div class="view"><p class="placeholder">Tool camera not connected yet</p></div>
+      <h2>Tool Camera</h2><button type="button" data-fullscreen="toolCamera">Full screen</button>
+      <form id="toolCameraConnection" class="controls">
+        <button type="submit">Reconnect tool camera</button>
+      </form>
+      <p class="status">XIAO: 192.168.4.5</p>
+      <div class="view">
+        <img id="toolCamera" src="http://192.168.4.5/stream" alt="Live XIAO tool camera">
+        <p id="toolCameraError" class="placeholder" hidden>Tool camera unavailable. Check that XIAO is at 192.168.4.5 and this computer is connected to AtomFramer, then reconnect.</p>
+      </div>
     </section>
   </div>
   <nav><a href="/">Back to station</a></nav>
@@ -116,6 +124,35 @@
     } finally {
       applyButton.disabled = false;
     }
+  });
+  const toolImage = document.getElementById('toolCamera');
+  const toolError = document.getElementById('toolCameraError');
+  function showToolCameraError() {
+    toolImage.style.display = 'none';
+    toolError.hidden = false;
+  }
+  toolImage.addEventListener('error', showToolCameraError);
+  toolImage.addEventListener('load', () => {
+    toolImage.style.display = 'block';
+    toolError.hidden = true;
+  });
+  // An unavailable camera may have failed before these listeners were registered.
+  if (toolImage.complete && toolImage.naturalWidth === 0) showToolCameraError();
+  document.getElementById('toolCameraConnection').addEventListener('submit', event => {
+    event.preventDefault();
+    toolImage.removeAttribute('src');
+    toolError.hidden = true;
+    toolImage.style.display = 'block';
+    toolImage.src = `http://192.168.4.5/stream?t=${Date.now()}`;
+  });
+  document.querySelectorAll('[data-fullscreen]').forEach(button => {
+    button.addEventListener('click', async () => {
+      try {
+        await document.getElementById(button.dataset.fullscreen).parentElement.requestFullscreen();
+      } catch (error) {
+        console.warn('Full screen unavailable', error);
+      }
+    });
   });
   loadSelection();
 </script>

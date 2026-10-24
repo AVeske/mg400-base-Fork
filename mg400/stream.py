@@ -60,6 +60,18 @@ def _acquire_camera():
                 camera.release()
                 log.error("Cannot open table camera %s. Check USB connection, camera permissions and other camera apps.", index)
                 return None
+            # Request a low-latency preview; drivers may negotiate different values.
+            camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+            camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            camera.set(cv2.CAP_PROP_FPS, 30)
+            camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            log.info("Table camera negotiated: width=%s height=%s fps=%s fourcc=%s buffer=%s",
+                     camera.get(cv2.CAP_PROP_FRAME_WIDTH),
+                     camera.get(cv2.CAP_PROP_FRAME_HEIGHT),
+                     camera.get(cv2.CAP_PROP_FPS),
+                     camera.get(cv2.CAP_PROP_FOURCC),
+                     camera.get(cv2.CAP_PROP_BUFFERSIZE))
             _camera = camera
             log.info("Table camera opened: index=%s", index)
         _viewers += 1
@@ -94,14 +106,13 @@ def generate_table_stream():
                 if not ok:
                     log.error("Could not read table camera frame; reload the stream after checking the camera.")
                     return
-                encoded, jpeg = cv2.imencode(".jpg", frame)
+                encoded, jpeg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
             if not encoded:
                 log.warning("Could not encode table camera frame as JPEG")
                 time.sleep(0.1)
                 continue
             yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
                    + jpeg.tobytes() + b"\r\n")
-            time.sleep(1 / 15)
     except cv2.error:
         log.exception("Table camera stream failed")
     finally:

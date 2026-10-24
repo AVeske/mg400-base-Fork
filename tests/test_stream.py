@@ -114,7 +114,7 @@ class TableStreamTest(unittest.TestCase):
         page = client.get("/stream")
         self.assertEqual(page.status_code, 200)
         self.assertIn(b'src="/video/table"', page.data)
-        self.assertIn(b'Tool camera not connected yet', page.data)
+        self.assertIn(b'src="http://192.168.4.5/stream"', page.data)
         self.assertNotIn(b'/video/tool', page.data)
         page.close()
         with client.get("/") as station_page:
