@@ -3,7 +3,7 @@ name = "mg400-base"
 version = "0.1.0"
 description = "Dobot MG400 base station: driver, control page with sliders and pump, CLI"
 requires-python = ">=3.10"
-dependencies = ["Flask>=3.0"]
+dependencies = ["Flask>=3.0", "opencv-python>=4.8"]
 
 [project.scripts]
 mg400 = "mg400.cli:main"

@@ -20,11 +20,12 @@ import json
 import os
 import threading
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, Response, jsonify, request, send_from_directory
 
 from .letter_api import register_letter_routes #Lisatud!
 from .letter_queue import LetterQueue #Lisatud!
 from .result_client import AtomResultReporter
+from .stream import generate_table_stream, select_table_camera, table_camera_status
 from . import live
 from .driver import DobotMG400, DobotError
 from .limits import DEFAULT_Z_FLOOR, RADIUS_MAX, RADIUS_MIN, WORKSPACE, clamp_pose
@@ -277,6 +278,31 @@ def _status_dict():
     with _loc_lock:
         st["slots"] = [_slot_public(i) for i in range(NUM_SLOTS)]
     return st
+
+
+@app.route("/stream")
+def stream_page():
+    return send_from_directory(STATIC, "stream.html")
+
+
+@app.route("/api/camera/table", methods=["GET", "POST"])
+def table_camera_config():
+    try:
+        if request.method == "POST":
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify(ok=False, error="Expected a JSON object"), 400
+            select_table_camera(data.get("index"))
+        return jsonify(ok=True, **table_camera_status())
+    except ValueError as error:
+        return jsonify(ok=False, error=str(error)), 400
+
+
+@app.route("/video/table")
+def table_video():
+    return Response(generate_table_stream(),
+                    content_type="multipart/x-mixed-replace; boundary=frame",
+                    headers={"Cache-Control": "no-store"})
 
 
 @app.route("/api/status")

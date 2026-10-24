@@ -5,8 +5,8 @@ import time
 ORIGIN_X = -40.0
 ORIGIN_Y = -440.0
 
-PEN_UP_Z = -37.0
-PEN_DOWN_Z = -49.0
+PEN_UP_Z = -47.0
+PEN_DOWN_Z = -58.0
 
 TOOL_R = -68.0
 

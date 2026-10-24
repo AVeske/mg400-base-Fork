@@ -24,9 +24,11 @@
   .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   input[type=text] { background:#0c0e12; border:1px solid var(--line); color:var(--txt);
     padding:8px 10px; border-radius:6px; font:inherit; width:150px; }
-  button { background:#232733; border:1px solid var(--line); color:var(--txt);
+  button, .stream-link { background:#232733; border:1px solid var(--line); color:var(--txt);
     padding:8px 14px; border-radius:6px; font:inherit; cursor:pointer; }
-  button:hover:not(:disabled) { border-color:var(--accent); }
+  button:hover:not(:disabled), .stream-link:hover { border-color:var(--accent); }
+  .stream-link { display:inline-block; text-decoration:none; background:#234c63;
+    border-color:#357796; color:#e0f4ff; }
   button:disabled {
     background:#171b22; border-color:#303642; color:#8f98aa;
     cursor:not-allowed; opacity:1;
@@ -114,6 +116,7 @@
       <button id="btnEnable" class="ok" disabled>Enable</button>
       <button id="btnDisable" disabled>Disable</button>
       <button id="btnClear" disabled>Clear Error</button>
+      <a href="/stream" class="stream-link">Stream</a>
     </div>
     <div class="hint" id="connHint">Robot must be in API mode — see README.md.
       Connect opens control 29999 · motion 30003 · feedback 30004.</div>
