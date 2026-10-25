@@ -56,7 +56,7 @@
       </form>
       <p class="status">XIAO: 192.168.4.5</p>
       <div class="view">
-        <img id="toolCamera" src="http://192.168.4.5/stream" alt="Live XIAO tool camera">
+        <img id="toolCamera" src="http://192.168.4.3/stream" alt="Live XIAO tool camera">
         <p id="toolCameraError" class="placeholder" hidden>Tool camera unavailable. Check that XIAO is at 192.168.4.5 and this computer is connected to AtomFramer, then reconnect.</p>
       </div>
     </section>
@@ -143,7 +143,7 @@
     toolImage.removeAttribute('src');
     toolError.hidden = true;
     toolImage.style.display = 'block';
-    toolImage.src = `http://192.168.4.5/stream?t=${Date.now()}`;
+    toolImage.src = `http://192.168.4.4/stream?t=${Date.now()}`;
   });
   document.querySelectorAll('[data-fullscreen]').forEach(button => {
     button.addEventListener('click', async () => {
